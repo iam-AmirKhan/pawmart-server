@@ -1,52 +1,66 @@
-const express = require('express')
-const cors = require('cors');
-const app = express()
-const port = process.env.PORT || 3000;
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const express = require("express");
+const cors = require("cors");
+const { MongoClient, ServerApiVersion } = require("mongodb");
+
+const app = express();
+const router = express.Router();
+const port = process.env.PORT || 5000;
 
 // middleware
 app.use(cors());
-app.use (express.json());
+app.use(express.json());
 
-// 46rnjUkRrzeW02LM
-// pawmart_db
+// MongoDB connection
 const uri = "mongodb+srv://pawmart_db:46rnjUkRrzeW02LM@cluster0.acmy9ks.mongodb.net/?appName=Cluster0";
 
-
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
     strict: true,
     deprecationErrors: true,
-  }
+  },
 });
 
-app.get('/', (req, res) => {
-  res.send('Hello World!')
-})
+app.get("/", (req, res) => {
+  res.send("Hello World!");
+});
 
 async function run() {
   try {
-    // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
+    const database = client.db("pawmart-db"); 
+    app.locals.db = database;
 
+  
+    router.get("/api/listings/recent", async (req, res) => {
+      try {
+        const listings = database.collection("data");
 
+        const recentListings = await listings
+          .find({})
+          .sort({ createdAt: -1 })
+          .limit(6)
+          .toArray();
 
+        res.json(recentListings);
+      } catch (error) {
+        res.status(500).json({ message: "Error fetching listings", error });
+      }
+    });
 
+  
+    app.use("/", router);
 
-    
-    // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
-  } finally {
-
+    console.log(" MongoDB connected successfully!");
+  } catch (err) {
+    console.error(" MongoDB connection error:", err);
   }
 }
+
 run().catch(console.dir);
 
-
+// Start server
 app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`)
-})
-
+  console.log(` Server running on port ${port}`);
+});
