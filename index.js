@@ -73,7 +73,22 @@ async function run() {
       res.send(listing);
     });
 
-  
+  //order=========
+
+    app.post("/orders", async (req, res) => {
+      try {
+        const order = req.body;
+        console.log(" Received order:", order);
+
+        const result = await ordersCollection.insertOne(order);
+
+        res.send({ insertedId: result.insertedId });
+      } catch (error) {
+        console.error(" Error saving order:", error);
+        res.status(500).send({ message: "Internal Server Error" });
+      }
+    });
+
     // ========== GET RECENT LISTINGS ==========
     app.get("/api/listings/recent", async (req, res) => {
       try {
