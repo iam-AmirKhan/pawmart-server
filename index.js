@@ -89,6 +89,20 @@ async function run() {
       }
     });
 
+    
+    // Add new listing
+app.post("/api/listings", async (req, res) => {
+  try {
+    const newListing = req.body;
+    const result = await listingsCollection.insertOne(newListing);
+    res.send({ insertedId: result.insertedId });
+  } catch (error) {
+    console.error("Error adding listing:", error);
+    res.status(500).send({ message: "Internal Server Error" });
+  }
+});
+
+
     // ========== GET RECENT LISTINGS ==========
     app.get("/api/listings/recent", async (req, res) => {
       try {
