@@ -1,5 +1,7 @@
 const express = require("express");
 const cors = require("cors");
+const { ObjectId } = require("mongodb");
+
 const { MongoClient, ServerApiVersion } = require("mongodb");
 
 const app = express();
@@ -31,6 +33,7 @@ async function run() {
     await client.connect();
     const database = client.db("pawmart-db");
     const listingsCollection = database.collection("data");
+    const ordersCollection = database.collection("orders");
 
     console.log(" MongoDB connected successfully!");
 
@@ -40,7 +43,9 @@ async function run() {
         const allListings = await listingsCollection.find({}).toArray();
         res.json(allListings);
       } catch (error) {
-        res.status(500).json({ message: "Error fetching listings", error: error.message });
+        res
+          .status(500)
+          .json({ message: "Error fetching listings", error: error.message });
       }
     });
 
@@ -53,10 +58,22 @@ async function run() {
         const categoryListings = await listingsCollection.find(query).toArray();
         res.json(categoryListings);
       } catch (error) {
-        res.status(500).json({ message: "Error fetching by category", error: error.message });
+        res.status(500).json({
+          message: "Error fetching by category",
+          error: error.message,
+        });
       }
     });
 
+    // Get single listing
+    app.get("/listings/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const listing = await listingsCollection.findOne(query);
+      res.send(listing);
+    });
+
+  
     // ========== GET RECENT LISTINGS ==========
     app.get("/api/listings/recent", async (req, res) => {
       try {
@@ -68,7 +85,10 @@ async function run() {
 
         res.json(recentListings);
       } catch (error) {
-        res.status(500).json({ message: "Error fetching recent listings", error: error.message });
+        res.status(500).json({
+          message: "Error fetching recent listings",
+          error: error.message,
+        });
       }
     });
   } catch (err) {
