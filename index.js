@@ -89,8 +89,23 @@ async function run() {
       }
     });
 
+    // Get all listings by user email
+app.get("/api/my-listings", async (req, res) => {
+  try {
+    const email = req.query.email; 
+    const listings = await listingsCollection
+      .find({ email: email })
+      .sort({ createdAt: -1 })
+      .toArray();
+    res.send(listings);
+  } catch (error) {
+    console.error("Error fetching user listings:", error);
+    res.status(500).send({ message: "Internal Server Error" });
+  }
+});
     
-    // Add new listing
+    // Add new listing=========
+    
 app.post("/api/listings", async (req, res) => {
   try {
     const newListing = req.body;
