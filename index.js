@@ -89,6 +89,7 @@ async function run() {
       }
     });
 
+    
     // Get all listings by user email
 app.get("/api/my-listings", async (req, res) => {
   try {
@@ -103,9 +104,20 @@ app.get("/api/my-listings", async (req, res) => {
     res.status(500).send({ message: "Internal Server Error" });
   }
 });
+
+//  Delete listing=========
+app.delete("/api/listings/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const result = await listingsCollection.deleteOne({ _id: new ObjectId(id) });
+    res.send(result);
+  } catch (error) {
+    res.status(500).send({ message: "Delete failed" });
+  }
+});
     
     // Add new listing=========
-    
+
 app.post("/api/listings", async (req, res) => {
   try {
     const newListing = req.body;
