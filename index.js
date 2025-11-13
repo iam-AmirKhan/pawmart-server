@@ -1,19 +1,25 @@
+require('dotenv').config();
+
 const express = require("express");
 const cors = require("cors");
 const { ObjectId } = require("mongodb");
-
 const { MongoClient, ServerApiVersion } = require("mongodb");
 
 const app = express();
 const port = process.env.PORT || 5000;
 
-// middleware
+// Middleware
 app.use(cors());
 app.use(express.json());
 
-// MongoDB connection URI
-const uri =
-  "mongodb+srv://pawmart_db:46rnjUkRrzeW02LM@cluster0.acmy9ks.mongodb.net/?appName=Cluster0";
+//MongoDB connection URI from .env
+const uri = process.env.MONGODB_URI;
+
+
+if (!uri) {
+  console.error("URI not found in .env file!");
+  process.exit(1);
+}
 
 const client = new MongoClient(uri, {
   serverApi: {
@@ -30,7 +36,9 @@ app.get("/", (req, res) => {
 
 async function run() {
   try {
+    // Connect to MongoDB 
     await client.connect();
+    
     const database = client.db("pawmart-db");
     const listingsCollection = database.collection("data");
     const ordersCollection = database.collection("orders");
@@ -73,8 +81,7 @@ async function run() {
       res.send(listing);
     });
 
-  //order=========
-
+    // ========== ORDER ==========
     app.post("/orders", async (req, res) => {
       try {
         const order = req.body;
@@ -89,46 +96,57 @@ async function run() {
       }
     });
 
-    
     // Get all listings by user email
-app.get("/api/my-listings", async (req, res) => {
-  try {
-    const email = req.query.email; 
-    const listings = await listingsCollection
-      .find({ email: email })
-      .sort({ createdAt: -1 })
-      .toArray();
-    res.send(listings);
-  } catch (error) {
-    console.error("Error fetching user listings:", error);
-    res.status(500).send({ message: "Internal Server Error" });
-  }
-});
+    app.get("/api/my-listings", async (req, res) => {
+      try {
+        const email = req.query.email;
+        const listings = await listingsCollection
+          .find({ email: email })
+          .sort({ createdAt: -1 })
+          .toArray();
+        res.send(listings);
+      } catch (error) {
+        console.error("Error fetching user listings:", error);
+        res.status(500).send({ message: "Internal Server Error" });
+      }
+    });
 
-//  Delete listing=========
-app.delete("/api/listings/:id", async (req, res) => {
-  try {
-    const id = req.params.id;
-    const result = await listingsCollection.deleteOne({ _id: new ObjectId(id) });
-    res.send(result);
-  } catch (error) {
-    res.status(500).send({ message: "Delete failed" });
-  }
-});
-    
-    // Add new listing=========
+    // Delete listing
+    app.delete("/api/listings/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const result = await listingsCollection.deleteOne({
+          _id: new ObjectId(id),
+        });
+        res.send(result);
+      } catch (error) {
+        res.status(500).send({ message: "Delete failed" });
+      }
+    });
 
-app.post("/api/listings", async (req, res) => {
-  try {
-    const newListing = req.body;
-    const result = await listingsCollection.insertOne(newListing);
-    res.send({ insertedId: result.insertedId });
-  } catch (error) {
-    console.error("Error adding listing:", error);
-    res.status(500).send({ message: "Internal Server Error" });
-  }
-});
+    // Add new listing
+    app.post("/api/listings", async (req, res) => {
+      try {
+        const newListing = req.body;
+        const result = await listingsCollection.insertOne(newListing);
+        res.send({ insertedId: result.insertedId });
+      } catch (error) {
+        console.error("Error adding listing:", error);
+        res.status(500).send({ message: "Internal Server Error" });
+      }
+    });
 
+    // Get orders by user email
+    app.get("/api/my-orders", async (req, res) => {
+      try {
+        const email = req.query.email;
+        const orders = await ordersCollection.find({ email }).toArray();
+        res.send(orders);
+      } catch (error) {
+        console.error("Error fetching orders:", error);
+        res.status(500).send({ message: "Internal Server Error" });
+      }
+    });
 
     // ========== GET RECENT LISTINGS ==========
     app.get("/api/listings/recent", async (req, res) => {
@@ -156,5 +174,5 @@ run().catch(console.dir);
 
 // Start server
 app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+  console.log(` Server running on port ${port}`);
 });
