@@ -37,7 +37,6 @@ app.get("/", (req, res) => {
 async function run() {
   try {
     // Connect to MongoDB 
-    await client.connect();
     
     const database = client.db("pawmart-db");
     const listingsCollection = database.collection("data");
